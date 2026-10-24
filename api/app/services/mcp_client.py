@@ -7,6 +7,7 @@ from fastmcp import Client
 from mcp.types import Tool as MCPTool
 
 from app.core.config import get_settings
+from app.mcp.tools.common import STAFF
 
 
 def make_mcp_client() -> Client:
@@ -17,6 +18,15 @@ def make_mcp_client() -> Client:
     from app.mcp.server import mcp  # noqa: PLC0415 — avoid circular import
 
     return Client(mcp)
+
+
+def tool_tags(tool: MCPTool) -> set[str]:
+    return set(((tool.meta or {}).get("fastmcp") or {}).get("tags") or [])
+
+
+def agent_visible_tools(tools: list[MCPTool]) -> list[MCPTool]:
+    """Drop tools tagged "staff" (approve/send notes, imports): they need a human."""
+    return [t for t in tools if STAFF not in tool_tags(t)]
 
 
 def mcp_tools_to_ollama(tools: list[MCPTool]) -> list[dict[str, Any]]:
