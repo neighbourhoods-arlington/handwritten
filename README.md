@@ -161,7 +161,8 @@ What the endpoint does (`api/app/api/routes/donors.py`, `api/app/services/letter
    batch week is a warning. One retry with the errors fed back and `format=<schema>`;
    if that fails too the note is stored without a body and flagged **needs attention**.
 5. The **badge** is computed by rules on the donor's history in
-   `api/app/services/badges.py`, never by the model. Seven badges exist; first match wins:
+   `api/app/services/badges.py`, never by the model. Seven badges exist; first match wins
+   (full description in `docs/BADGES.md`):
 
    | Badge | Rule |
    |-------|------|

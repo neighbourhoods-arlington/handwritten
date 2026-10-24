@@ -3,6 +3,7 @@
 One badge per note. Rules are checked in order; the first match wins. They only use
 facts already in the database (gift dates, channels, the donor's own note), so the
 same history always yields the same badge and nothing is invented.
+Full description with examples: docs/BADGES.md
 
 | key          | rule (first match wins)                                                   |
 |--------------|---------------------------------------------------------------------------|
