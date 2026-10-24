@@ -40,8 +40,10 @@ class Settings(BaseSettings):
     # Agent (Ollama → MCP tools)
     agent_max_steps: int = Field(default=8, ge=1, le=50)
     agent_system_prompt: str = (
-        "You are a helpful assistant for the Handwritten project. "
-        "Use the available tools to look up or modify documents when needed. "
+        "You are a helpful assistant for the Handwritten project (Phoenix Bikes). "
+        "Use the available tools to look up donors and gifts, find gifts eligible for a "
+        "thank-you note, write and edit draft notes, and search documents. "
+        "You cannot approve or send notes; staff do that. "
         "Answer in the user's language."
     )
 

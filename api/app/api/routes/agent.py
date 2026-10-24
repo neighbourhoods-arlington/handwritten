@@ -3,7 +3,7 @@ from ollama import ResponseError
 
 from app.schemas.agent import AgentRequest, AgentResponse, AgentToolOut, ToolCallOut
 from app.services.agent import run_agent
-from app.services.mcp_client import make_mcp_client, mcp_tools_to_ollama
+from app.services.mcp_client import agent_visible_tools, make_mcp_client, mcp_tools_to_ollama
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 
@@ -12,7 +12,8 @@ router = APIRouter(prefix="/agent", tags=["agent"])
 async def tools() -> list[AgentToolOut]:
     """MCP tools visible to the agent (Ollama format)."""
     async with make_mcp_client() as mcp:
-        return [AgentToolOut(**t["function"]) for t in mcp_tools_to_ollama(await mcp.list_tools())]
+        tools = agent_visible_tools(await mcp.list_tools())
+        return [AgentToolOut(**t["function"]) for t in mcp_tools_to_ollama(tools)]
 
 
 @router.post("/chat", response_model=AgentResponse)

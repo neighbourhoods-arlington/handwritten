@@ -8,9 +8,7 @@ from app.core.db import Base
 
 # "Raise + Ride" campaign gifts count as raise_ride, everything else as direct.
 # If the real Bloomerang campaign name differs, change only this expression.
-CHANNEL_EXPR = (
-    "CASE WHEN lower(campaign) LIKE 'raise + ride%' THEN 'raise_ride' ELSE 'direct' END"
-)
+CHANNEL_EXPR = "CASE WHEN lower(campaign) LIKE 'raise + ride%' THEN 'raise_ride' ELSE 'direct' END"
 
 
 class Gift(Base):

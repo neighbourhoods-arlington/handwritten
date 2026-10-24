@@ -13,6 +13,7 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.services.mcp_client import (
+    agent_visible_tools,
     make_mcp_client,
     mcp_tools_to_ollama,
     normalize_tool_args,
@@ -55,7 +56,9 @@ async def run_agent(
     ollama = get_ollama()
 
     async with make_mcp_client() as mcp:
-        tools = mcp_tools_to_ollama(await mcp.list_tools())
+        visible = agent_visible_tools(await mcp.list_tools())
+        allowed = {t.name for t in visible}
+        tools = mcp_tools_to_ollama(visible)
 
         for step in range(1, max_steps + 1):
             resp = await ollama.chat(model=model, messages=history, tools=tools, stream=False)
@@ -75,6 +78,8 @@ async def run_agent(
                 name = call.function.name
                 args = normalize_tool_args(call.function.arguments)
                 try:
+                    if name not in allowed:
+                        raise ValueError(f"Tool {name!r} is not available to the agent")
                     result = await mcp.call_tool(name, args)
                     text = tool_result_to_text(result)
                     error = False

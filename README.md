@@ -54,7 +54,7 @@ POST /api/v1/agent/chat
         │  └──── tool_calls ◀──────────────────┘
         ▼
  fastmcp.Client ──▶ MCP server (app/mcp/server.py)
-                      list_documents / get_document / create_document / search_documents
+                      donors / gifts / notes / imports / documents (20 tools)
                                 │
                                 ▼
                            PostgreSQL
@@ -72,7 +72,8 @@ curl -X POST localhost:8000/api/v1/agent/chat \
 
 The response contains `content` (final answer), `steps`, and `tool_calls` (which tool
 was called with which arguments and what it returned). `GET /api/v1/agent/tools` lists
-the tools visible to the agent.
+the tools visible to the agent. Tools tagged `staff` (`approve_note`, `mark_note_sent`,
+`import_gifts_csv`) are hidden from the agent: a person has to approve and send notes.
 
 ## Ollama
 
@@ -102,9 +103,10 @@ Endpoints: `POST /api/v1/llm/generate`, `POST /api/v1/llm/chat`,
 
 ## MCP server
 
-Built with [FastMCP](https://gofastmcp.com). Tools: `list_documents`, `get_document`,
-`create_document`, `search_documents`. Resource: `handwritten://config`.
-Prompt: `transcribe_prompt`.
+Built with [FastMCP](https://gofastmcp.com). 20 tools in five groups (donors, gifts,
+thank-you notes, imports, documents), prompts `thank_you_note_prompt` and
+`transcribe_prompt`, resource `handwritten://config`.
+**Full tool reference: [docs/mcp-tools.md](docs/mcp-tools.md).**
 
 Besides the Ollama agent, any other MCP client (e.g. Claude) can connect to the same server.
 
