@@ -18,9 +18,12 @@ handwritten/
 │   ├── .env.example
 │   ├── Dockerfile
 │   └── pyproject.toml
-├── web/                 Frontend (framework not chosen yet — see web/README.md)
-│   └── .env.example
-├── docker-compose.yml   db (PostgreSQL 17) + api (+ optional ollama profile)
+├── web/                 Qwik City frontend (Vite, SSR) — see web/README.md
+│   ├── src/routes/      Pages (index shows API status + documents)
+│   ├── src/lib/api.ts   Typed client for the backend
+│   ├── .env.example
+│   └── Dockerfile
+├── docker-compose.yml   db (PostgreSQL 17) + api + web (+ optional ollama profile)
 ├── .env.example         Infrastructure variables for docker-compose
 └── Makefile
 ```
@@ -29,12 +32,13 @@ handwritten/
 
 ```bash
 make setup          # copy .env, api/.env, web/.env from their examples
-make up             # start PostgreSQL + API (migrations run automatically)
+make up             # start PostgreSQL + API + web (migrations run automatically)
 make logs
 ```
 
 | URL | What |
 |-----|------|
+| http://localhost:5173 | Web app (Qwik) |
 | http://localhost:8000/docs | Swagger UI |
 | http://localhost:8000/api/v1/health/ready | DB + Ollama connectivity |
 | http://localhost:8000/mcp | MCP server (Streamable HTTP) |
@@ -127,6 +131,15 @@ cd api && .venv/bin/uvicorn app.main:app --reload
 make test
 make lint
 ```
+
+## Web (Qwik)
+
+```bash
+cd web && npm install && npm run dev     # without Docker
+```
+
+The browser calls the API via `PUBLIC_API_BASE_URL`; SSR uses the server-only
+`API_BASE_URL` (set to `http://api:8000/api/v1` inside compose). Details in `web/README.md`.
 
 ## Migrations
 

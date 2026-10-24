@@ -1,0 +1,46 @@
+/* ── Project base styles ── */
+:root {
+  color-scheme: light dark;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+  padding: 0 16px;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 0;
+}
+
+.status,
+.documents {
+  list-style: none;
+  padding: 0;
+}
+
+.documents li {
+  padding: 12px 0;
+  border-top: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+}
+
+.documents p {
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+}
+
+.muted {
+  opacity: 0.65;
+}
+
+.error {
+  color: #c0392b;
+}

@@ -6,7 +6,7 @@ setup:         ## Copy .env files from their examples (if missing)
 	@test -f web/.env || cp web/.env.example web/.env
 	@echo ".env files ready"
 
-up:            ## Start PostgreSQL + API
+up:            ## Start PostgreSQL + API + web
 	docker compose up -d --build
 
 up-ollama:     ## Start with Ollama in a container as well
@@ -17,6 +17,12 @@ down:
 
 logs:
 	docker compose logs -f api
+
+logs-web:
+	docker compose logs -f web
+
+web-dev:       ## Run the Qwik dev server on the host
+	cd web && npm run dev
 
 migrate:       ## Run Alembic migrations
 	docker compose exec api alembic upgrade head

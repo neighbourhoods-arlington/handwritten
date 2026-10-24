@@ -50,17 +50,24 @@ services:
       sh -c "alembic upgrade head &&
              uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
-  # Enable once a frontend is set up in web/ (see web/README.md)
-  # web:
-  #   build:
-  #     context: ./web
-  #   container_name: handwritten-web
-  #   env_file:
-  #     - ./web/.env
-  #   ports:
-  #     - "${WEB_PORT:-3000}:3000"
-  #   depends_on:
-  #     - api
+  web:
+    build:
+      context: ./web
+    container_name: handwritten-web
+    restart: unless-stopped
+    env_file:
+      - ./web/.env
+    environment:
+      # SSR calls the API over the compose network; the browser uses PUBLIC_API_BASE_URL
+      API_BASE_URL: http://api:8000/api/v1
+    ports:
+      - "${WEB_PORT:-5173}:5173"
+    volumes:
+      # Mount source for hot reload; keep node_modules from the image
+      - ./web:/app
+      - web_node_modules:/app/node_modules
+    depends_on:
+      - api
 
   # Optional: run Ollama in a container
   #   docker compose --profile ollama up -d
@@ -78,3 +85,4 @@ services:
 volumes:
   pgdata:
   ollama_data:
+  web_node_modules:
