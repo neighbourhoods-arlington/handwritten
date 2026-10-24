@@ -44,3 +44,127 @@ body {
 .error {
   color: #c0392b;
 }
+
+/* ── Navigation ── */
+.site-header {
+  border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+}
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 0;
+}
+.nav .brand {
+  font-weight: 700;
+  text-decoration: none;
+  color: inherit;
+}
+.nav ul {
+  display: flex;
+  gap: 16px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.nav a {
+  text-decoration: none;
+  color: inherit;
+  opacity: 0.75;
+}
+.nav a.active,
+.nav a:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+/* ── Donors page ── */
+.container.wide,
+main.container:has(table.donors) {
+  max-width: 1080px;
+}
+.search {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+}
+.search input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  background: transparent;
+  color: inherit;
+}
+button {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+button.primary {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+  white-space: nowrap;
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+table.donors {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+table.donors th,
+table.donors td {
+  text-align: left;
+  padding: 10px 8px;
+  border-top: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+  vertical-align: top;
+}
+table.donors th {
+  border-top: 0;
+  font-weight: 600;
+  opacity: 0.75;
+}
+.num {
+  text-align: right !important;
+}
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+}
+.small {
+  font-size: 0.85em;
+}
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.8em;
+  margin: 0 4px 4px 0;
+}
+.tag.warn {
+  background: color-mix(in srgb, #f59e0b 20%, transparent);
+}
+.tag.info {
+  background: color-mix(in srgb, #2563eb 18%, transparent);
+}
+.ok {
+  color: #15803d;
+}
+.warn-text {
+  color: #b45309;
+}
+@media (max-width: 720px) {
+  table.donors th:nth-child(2),
+  table.donors td:nth-child(2),
+  table.donors th:nth-child(5),
+  table.donors td:nth-child(5) {
+    display: none;
+  }
+}

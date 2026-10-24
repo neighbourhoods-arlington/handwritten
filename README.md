@@ -7,7 +7,7 @@ exposing domain tools, and an Ollama-powered agent that calls those tools.
 handwritten/
 ├── api/                 FastAPI + SQLAlchemy (async) + Alembic + FastMCP + Ollama
 │   ├── app/
-│   │   ├── api/routes/  health, documents (CRUD), llm (generate/chat/ocr), agent
+│   │   ├── api/routes/  health, donors (+ "Say thank-you"), documents, llm, agent
 │   │   ├── core/        config (pydantic-settings), db (async engine)
 │   │   ├── mcp/         MCP server (FastMCP) — mounted at /mcp, or run via stdio
 │   │   ├── models/      SQLAlchemy models
@@ -19,7 +19,7 @@ handwritten/
 │   ├── Dockerfile
 │   └── pyproject.toml
 ├── web/                 Qwik City frontend (Vite, SSR) — see web/README.md
-│   ├── src/routes/      Pages (index shows API status + documents)
+│   ├── src/routes/      Pages: index (API status), donors (list + "Say thank-you")
 │   ├── src/lib/api.ts   Typed client for the backend
 │   ├── .env.example
 │   └── Dockerfile
@@ -133,6 +133,22 @@ cd api && .venv/bin/uvicorn app.main:app --reload
 make test
 make lint
 ```
+
+## Donors page and "Say thank-you"
+
+http://localhost:5173/donors/ lists every donor from the `donor_summary` view with
+gift counts, totals, last gift and status tags ("Raise + Ride only", "No mailing
+address", open note). Each row has a **Say thank-you** button that calls
+`POST /api/v1/donors/{id}/thank-you`.
+
+The endpoint only creates a **draft** `thank_you_notes` row for the donor's most recent
+direct gift that has no active note. It refuses with an explicit reason (HTTP 409) when
+the donor has only Raise + Ride gifts, when every direct gift is already thanked, or
+when an open draft/approved note exists. A recent sent note inside the cooldown is
+returned as a warning, not a block. Text generation, approval and export are separate
+steps; this endpoint can never mark a note approved or sent.
+
+Other donor endpoints: `GET /api/v1/donors?q=&limit=&offset=`, `GET /api/v1/donors/{id}`.
 
 ## Web (Qwik)
 
