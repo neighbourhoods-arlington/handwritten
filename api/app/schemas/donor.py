@@ -55,3 +55,22 @@ class DonorSummaryRead(BaseModel):
     last_gift_date: date | None
     raise_ride_only: bool
     last_note_sent_at: datetime | None
+
+
+class DonorListItem(DonorSummaryRead):
+    """One row of the Donors page: giving summary + contact + open-note state."""
+
+    email: str | None
+    city: str | None
+    state: str | None
+    has_address: bool
+    # Open (draft/approved) note, if any — the donor is already queued for a thank-you
+    pending_note_id: int | None = None
+    pending_note_status: str | None = None
+
+
+class DonorListResponse(BaseModel):
+    items: list[DonorListItem]
+    total: int
+    limit: int
+    offset: int

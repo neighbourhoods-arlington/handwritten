@@ -60,6 +60,12 @@ CREATE TABLE thank_you_notes (
     approved_at TIMESTAMPTZ,
     sent_at     TIMESTAMPTZ,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    -- Letter generation (migration 0003)
+    share_token TEXT UNIQUE,         -- token for the private donor page / QR link
+    badge_key   TEXT,                -- curated badge chosen for the donor page
+    impact_key  TEXT,                -- curated impact statement used in the note
+    llm_model   TEXT,                -- model that drafted the body
+    checks      JSONB,               -- validation issues / warnings from generation
     -- Personel onayı olmadan "approved" veya "sent" olamaz
     CONSTRAINT approval_required
         CHECK (status NOT IN ('approved', 'sent') OR approved_by IS NOT NULL)

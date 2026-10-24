@@ -7,7 +7,7 @@ ALL_TOOLS = {
     "list_documents", "get_document", "create_document", "search_documents",
     "search_donors", "get_donor", "update_donor_address",
     "get_donor_summary", "list_donor_summaries",
-    "list_gifts", "find_eligible_gifts",
+    "list_gifts", "find_eligible_gifts", "get_gift_context",
     "list_notes", "get_note", "create_note_draft", "update_note_draft",
     "reject_note", "approve_note", "mark_note_sent",
     "list_import_batches", "import_gifts_csv",

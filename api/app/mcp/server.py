@@ -17,7 +17,7 @@ Runs in two modes:
 from fastmcp import FastMCP
 
 from app.core.config import get_settings
-from app.mcp.tools import documents, donors, gifts, imports, notes
+from app.mcp.tools import documents, donors, gifts, imports, letter_context, notes
 
 settings = get_settings()
 
@@ -30,7 +30,7 @@ mcp = FastMCP(
     ),
 )
 
-for sub in (documents, donors, gifts, notes, imports):
+for sub in (documents, donors, gifts, letter_context, notes, imports):
     mcp.mount(sub)
 
 

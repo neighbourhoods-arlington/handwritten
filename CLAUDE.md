@@ -44,7 +44,7 @@ We use **fictional donor data only**.
   Any OpenAI-compatible endpoint works: OpenRouter (default), Ollama local
   (`http://localhost:11434/v1`), etc. Never hardcode a model name.
 
-## Data model (PostgreSQL — see `db/01_schema.sql`, `db/02_views.sql`)
+## Data model (PostgreSQL — see `datasets/schemas/01_schema.sql`, `datasets/schemas/02_views.sql`)
 
 - `import_batches` — one row per uploaded CSV.
 - `donors` — keyed by Bloomerang `account_number` (UNIQUE).
@@ -92,11 +92,18 @@ must include deliberate edge cases so the filter logic is demonstrable:
 
 ## Stack
 
-<!-- Fill in once decided; keep this section accurate. -->
-- Backend: TODO (e.g. Python/FastAPI or Go)
-- DB: PostgreSQL
-- Frontend: TODO (minimal review UI; server-rendered is fine)
+<!-- Keep this section accurate. -->
+- Monorepo: `api/` (backend) and `web/` (frontend); `docker-compose.yml` at the root.
+- Backend: Python 3.13, FastAPI (async), SQLAlchemy 2 async + asyncpg, Alembic migrations
+  (`api/alembic/`), pydantic-settings for config (`api/app/core/config.py`).
+- DB: PostgreSQL 17. Canonical schema lives in `datasets/schemas/01_schema.sql` and
+  `02_views.sql`; Alembic migrations must stay in sync with those files.
+- Frontend: Qwik City (Vite, SSR) in `web/`, dev server on :5173. Simple pages may also be
+  server-rendered from FastAPI (`api/app/pages/`, e.g. `/upload`).
 - LLM: OpenAI-compatible client, OpenRouter by default, Ollama for offline demo
+  (`LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`).
+- MCP server (FastMCP, mounted at `/mcp`) exists for tooling/inspection; it is not part of
+  the core pipeline and must never bypass staff approval.
 - Run everything with `docker compose up`; seed with `make seed`.
 
 ## Conventions

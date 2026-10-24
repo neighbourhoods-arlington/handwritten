@@ -37,6 +37,12 @@ class Settings(BaseSettings):
     # Example: http://localhost:8000/mcp or any external MCP server URL
     mcp_client_url: str = ""
 
+    # Thank-you letters
+    web_base_url: str = "http://localhost:5173"  # base for the QR / share links
+    donate_link: str = "phoenixbikes.org/donate"  # must appear in every note
+    letter_max_chars: int = Field(default=520, ge=100)  # fits one Uuna Tek card
+    letter_similarity_threshold: float = Field(default=0.75, ge=0, le=1)
+
     # Agent (Ollama → MCP tools)
     agent_max_steps: int = Field(default=8, ge=1, le=50)
     agent_system_prompt: str = (

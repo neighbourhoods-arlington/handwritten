@@ -1,77 +1,95 @@
 import { component$ } from "@builder.io/qwik";
-import { routeLoader$, type DocumentHead } from "@builder.io/qwik-city";
-import { api, type Document, type HealthReady } from "~/lib/api";
+import { Link, routeLoader$, type DocumentHead } from "@builder.io/qwik-city";
+import { api, type DonorListItem, type HealthReady } from "~/lib/api";
 
 interface Overview {
   health: HealthReady | null;
-  documents: Document[];
+  donors: DonorListItem[];
+  total: number;
   error: string | null;
 }
 
 export const useOverview = routeLoader$<Overview>(async ({ env }) => {
   try {
-    const [health, documents] = await Promise.all([
+    const [health, donors] = await Promise.all([
       api.healthReady(env),
-      api.listDocuments(env, 20),
+      api.listDonors(env, "", 500),
     ]);
-    return { health, documents, error: null };
+    return { health, donors: donors.items, total: donors.total, error: null };
   } catch (e) {
-    return { health: null, documents: [], error: (e as Error).message };
+    return { health: null, donors: [], total: 0, error: (e as Error).message };
   }
 });
 
 export default component$(() => {
-  const overview = useOverview();
-  const { health, documents, error } = overview.value;
+  const { health, donors, total, error } = useOverview().value;
+  const queued = donors.filter((d) => d.pending_note_status).length;
+  const rrOnly = donors.filter((d) => d.raise_ride_only).length;
+  const noAddress = donors.filter((d) => !d.has_address).length;
 
   return (
     <main class="container">
-      <h1>Handwritten</h1>
+      <h1>Overview</h1>
+
+      {error && <p class="error">Could not reach the API: {error}</p>}
 
       <section>
-        <h2>Backend status</h2>
-        {error ? (
-          <p class="error">Could not reach the API: {error}</p>
-        ) : (
-          <ul class="status">
-            <li>
-              API: <strong>{health?.status}</strong>
-            </li>
-            <li>Database: {health?.database ? "connected" : "unavailable"}</li>
-            <li>Ollama: {health?.ollama ? "connected" : "unavailable"}</li>
-          </ul>
-        )}
+        <h2>Backend</h2>
+        <div class="figures">
+          <div
+            class={{ fig: true, pass: health?.status === "ok", fail: !health }}
+          >
+            <b>{health?.status ?? "down"}</b>
+            <span>API</span>
+          </div>
+          <div
+            class={{
+              fig: true,
+              pass: !!health?.database,
+              fail: !health?.database,
+            }}
+          >
+            <b>{health?.database ? "connected" : "unavailable"}</b>
+            <span>PostgreSQL</span>
+          </div>
+          <div
+            class={{ fig: true, pass: !!health?.ollama, fail: !health?.ollama }}
+          >
+            <b>{health?.ollama ? "connected" : "unavailable"}</b>
+            <span>Ollama</span>
+          </div>
+        </div>
       </section>
 
       <section>
-        <h2>Documents ({documents.length})</h2>
-        {documents.length === 0 ? (
-          <p class="muted">No documents yet.</p>
-        ) : (
-          <ul class="documents">
-            {documents.map((d) => (
-              <li key={d.id}>
-                <strong>{d.title}</strong>
-                <span class="muted">
-                  {" "}
-                  · {new Date(d.created_at).toLocaleString()}
-                </span>
-                {d.content && <p>{d.content}</p>}
-              </li>
-            ))}
-          </ul>
-        )}
+        <h2>Donors</h2>
+        <div class="figures">
+          <div class="fig">
+            <b>{total}</b>
+            <span>donors imported</span>
+          </div>
+          <div class="fig">
+            <b>{queued}</b>
+            <span>with an open thank-you note</span>
+          </div>
+          <div class="fig">
+            <b>{rrOnly}</b>
+            <span>Raise + Ride only (not thanked here)</span>
+          </div>
+          <div class="fig">
+            <b>{noAddress}</b>
+            <span>missing a mailing address</span>
+          </div>
+        </div>
+        <Link href="/donors/" class="btn primary">
+          Open the donor list
+        </Link>
       </section>
     </main>
   );
 });
 
 export const head: DocumentHead = {
-  title: "Handwritten",
-  meta: [
-    {
-      name: "description",
-      content: "Handwritten — documents, MCP tools and an Ollama agent",
-    },
-  ],
+  title: "Overview · Phoenix Bikes thank-you notes",
+  meta: [{ name: "description", content: "Backend status and donor overview" }],
 };

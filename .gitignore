@@ -34,3 +34,7 @@ ollama_data/
 .DS_Store
 .idea/
 .vscode/
+
+# ── Editor swap files ──
+*.swp
+*.swo

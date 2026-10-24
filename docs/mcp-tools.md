@@ -79,6 +79,7 @@ Read-only tools carry the `readOnlyHint: true` annotation, so clients such as Cl
 | | [`list_donor_summaries`](#list_donor_summaries) | read | Filtered list of giving totals |
 | Gifts | [`list_gifts`](#list_gifts) | read | Filtered list of gifts |
 | | [`find_eligible_gifts`](#find_eligible_gifts) | read | Gifts to thank this week |
+| | [`get_gift_context`](#get_gift_context) | read | Everything needed to draft a note for one gift: gift, donor, compact history, previous-note excerpts, computed badge |
 | Notes | [`list_notes`](#list_notes) | read | Filtered list of notes |
 | | [`get_note`](#get_note) | read | Note + address + gift |
 | | [`create_note_draft`](#create_note_draft) | write | Create a draft |
@@ -207,6 +208,20 @@ Returns: `[{donor_id, gift_id, first_name, last_name, gift_date, amount, fund, c
 Pass `today` to simulate a past or future week.
 
 ---
+
+### `get_gift_context`
+
+Everything the letter agent needs for **one** gift, and nothing else: the gift (amount,
+date, fund, what the donor wrote), the donor's name, a compact giving history
+(`is_first_direct_gift`, `nth_direct_gift`, `direct_gift_count`, first/previous direct gift
+dates, `days_since_previous_direct_gift`, `years_with_a_gift`, `also_rides_raise_ride`,
+`gift_is_in_memory_or_honor`), up to 3 excerpts of previous notes, and the `badge` computed
+from that history (see `api/app/services/badges.py`). Other gifts' amounts are left out on
+purpose so the model cannot mix them into the note.
+
+| arg | type |
+|-----|------|
+| `gift_id` | int |
 
 ## Notes
 

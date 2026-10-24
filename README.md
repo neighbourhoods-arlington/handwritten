@@ -7,7 +7,7 @@ exposing domain tools, and an Ollama-powered agent that calls those tools.
 handwritten/
 ├── api/                 FastAPI + SQLAlchemy (async) + Alembic + FastMCP + Ollama
 │   ├── app/
-│   │   ├── api/routes/  health, documents (CRUD), llm (generate/chat/ocr), agent
+│   │   ├── api/routes/  health, donors (+ "Say thank-you"), documents, llm, agent
 │   │   ├── core/        config (pydantic-settings), db (async engine)
 │   │   ├── mcp/         MCP server (FastMCP) — mounted at /mcp, or run via stdio
 │   │   ├── models/      SQLAlchemy models
@@ -19,7 +19,7 @@ handwritten/
 │   ├── Dockerfile
 │   └── pyproject.toml
 ├── web/                 Qwik City frontend (Vite, SSR) — see web/README.md
-│   ├── src/routes/      Pages (index shows API status + documents)
+│   ├── src/routes/      Pages: index (API status), donors (list + "Say thank-you")
 │   ├── src/lib/api.ts   Typed client for the backend
 │   ├── .env.example
 │   └── Dockerfile
@@ -133,6 +133,57 @@ cd api && .venv/bin/uvicorn app.main:app --reload
 make test
 make lint
 ```
+
+## Donors page, "Say thank-you" and letters
+
+http://localhost:5173/donors/ lists every donor from the `donor_summary` view with
+gift counts, totals, last gift and status tags ("Raise + Ride only", "No mailing
+address", "Ready", open letter). **Say thank-you** on a row calls
+`POST /api/v1/donors/{id}/thank-you` and then opens `/donors/{id}/letter/`.
+
+What the endpoint does (`api/app/api/routes/donors.py`, `api/app/services/letter.py`):
+
+1. If the donor already has an open (draft/approved) note **with a body, it is returned
+   unchanged**. A note without a body ("needs attention") is regenerated.
+2. Otherwise it creates a draft `thank_you_notes` row for the latest un-thanked direct
+   gift. Refusals carry an explicit reason (HTTP 409): Raise + Ride only, every direct
+   gift already thanked. A recent sent note inside the cooldown is a warning, not a block.
+3. The Ollama agent gathers facts through the `get_gift_context` MCP tool, which is
+   scoped to **the one gift being thanked**: amount, date, fund, what the donor wrote, a
+   compact giving history (first gift? returning? nth direct gift since which year) and
+   excerpts of previous letters. Other gifts' amounts are left out so they cannot leak
+   into the note. The model answers with **structured JSON**: `greeting`, `gift_thanks`,
+   `closing`, plus `impact_key` from the curated list in `api/app/content/letters.py`.
+   The impact sentence is inserted by code, the model never writes it.
+4. Checks before the body is accepted: first name present, the only dollar amount is the
+   gift's, `phoenixbikes.org/donate` present, no placeholder brackets, fits one card
+   (520 chars), impact statement not repeated. Similarity to other notes in the same
+   batch week is a warning. One retry with the errors fed back and `format=<schema>`;
+   if that fails too the note is stored without a body and flagged **needs attention**.
+5. The **badge** is computed by rules on the donor's history in
+   `api/app/services/badges.py`, never by the model. Seven badges exist; first match wins:
+
+   | Badge | Rule |
+   |-------|------|
+   | Lantern | the gift's note says "in memory" / "in honor" |
+   | First Gear | the donor's first direct gift |
+   | Headlight | returning: previous direct gift 365+ days earlier |
+   | Spoke Star | gives directly and rides Raise + Ride |
+   | Chain Keeper | 3+ direct gifts over 2+ calendar years |
+   | Tailwind | quick follow-up: previous direct gift within 60 days |
+   | Kickstand | everything else |
+
+6. A `share_token` is minted; `GET /api/v1/notes/{id}/qr.svg` renders a QR code to
+   `WEB_BASE_URL/t/{token}/`, the private donor page (badge + thanks, **no amounts**,
+   `noindex`). Data comes from `GET /api/v1/public/t/{token}`.
+
+The letter page has a **Send to Uuna Tek** button. It is a placeholder: it only shows the
+toast "Sent into the Queue: TBD". The export queue is not built yet.
+
+Nothing in this flow can approve or send a note; that stays with staff in the review step.
+
+Other endpoints: `GET /api/v1/donors?q=&limit=&offset=`, `GET /api/v1/donors/{id}`,
+`GET /api/v1/donors/{id}/thank-you` (existing letter or 404).
 
 ## Web (Qwik)
 
