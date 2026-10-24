@@ -1,6 +1,6 @@
 """Server-rendered /upload page (plain HTML, no frontend build needed).
 
-Contains a single file input and a "Renew" button to upload donor/gift data.
+Contains a file input, a disabled Bloomerang API input, and a "Renew" button.
 """
 
 from fastapi import APIRouter
@@ -17,11 +17,13 @@ UPLOAD_PAGE = """<!doctype html>
   <style>
     :root { color-scheme: light dark; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
     body { margin: 0; padding: 0 16px; }
-    main { max-width: 560px; margin: 48px auto; }
+    main { max-width: 700px; margin: 48px auto; }
     h1 { font-size: 1.5rem; margin-bottom: 24px; }
     form { display: grid; gap: 16px; }
     label { display: grid; gap: 8px; }
-    input[type="file"] { padding: 10px; border: 1px dashed color-mix(in srgb, currentColor 40%, transparent); border-radius: 8px; }
+    .input-row { display: flex; align-items: center; gap: 3rem; flex-wrap: wrap; }
+    input[type="file"], input[type="text"] { padding: 10px; border: 1px dashed color-mix(in srgb, currentColor 40%, transparent); border-radius: 8px; }
+    input[type="text"]:disabled { background-color: color-mix(in srgb, currentColor 10%, transparent); cursor: not-allowed; opacity: 0.7; }
     button { justify-self: start; padding: 10px 20px; border: 0; border-radius: 8px; background: #2563eb; color: #fff; font-size: 1rem; cursor: pointer; }
     button:hover { background: #1d4ed8; }
     .hint { opacity: 0.8; font-size: 0.9rem; }
@@ -33,10 +35,18 @@ UPLOAD_PAGE = """<!doctype html>
   <main>
     <h1>Upload</h1>
     <form id="upload-form">
-      <label>
-        File
-        <input type="file" id="file" name="file" accept=".csv" required>
-      </label>
+      <div class="input-row">
+        <label>
+          File
+          <input type="file" id="file" name="file" accept=".csv" required>
+        </label>
+        
+        <label>
+          Source
+          <input type="text" placeholder="Bloomerang API" disabled>
+        </label>
+      </div>
+      
       <button type="submit" id="renew">Renew</button>
       <p class="hint" id="status">Please select a CSV file and click Renew.</p>
     </form>
