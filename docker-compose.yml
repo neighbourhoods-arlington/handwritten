@@ -1,0 +1,80 @@
+# Root-ээс ажиллуулна:  docker compose up -d --build
+# Тохиргоо:             cp .env.example .env && cp api/.env.example api/.env
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: handwritten-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-handwritten}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-handwritten}
+      POSTGRES_DB: ${POSTGRES_DB:-handwritten}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-handwritten} -d ${POSTGRES_DB:-handwritten}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./api
+    container_name: handwritten-api
+    restart: unless-stopped
+    env_file:
+      - ./api/.env
+    # Доорх утгууд api/.env-ийн утгыг дарна (контейнер дотор хостын нэр өөр)
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: ${POSTGRES_USER:-handwritten}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-handwritten}
+      POSTGRES_DB: ${POSTGRES_DB:-handwritten}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL_DOCKER:-http://host.docker.internal:11434}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      # Hot reload-д зориулж эх кодыг mount хийнэ
+      - ./api/app:/app/app
+      - ./api/alembic:/app/alembic
+    depends_on:
+      db:
+        condition: service_healthy
+    extra_hosts:
+      # Linux дээр хостын Ollama-г host.docker.internal-аар дуудах
+      - "host.docker.internal:host-gateway"
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  # web/ дотор frontend сонгосны дараа идэвхжүүлнэ (web/README.md харах)
+  # web:
+  #   build:
+  #     context: ./web
+  #   container_name: handwritten-web
+  #   env_file:
+  #     - ./web/.env
+  #   ports:
+  #     - "${WEB_PORT:-3000}:3000"
+  #   depends_on:
+  #     - api
+
+  # Сонголттой: Ollama-г контейнерт ажиллуулах
+  #   docker compose --profile ollama up -d
+  #   root .env дотор OLLAMA_BASE_URL_DOCKER=http://ollama:11434
+  ollama:
+    image: ollama/ollama:latest
+    container_name: handwritten-ollama
+    profiles: ["ollama"]
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  pgdata:
+  ollama_data:
