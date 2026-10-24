@@ -37,7 +37,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
-# FastAPI-ийн Depends()/File()/Form() default хэв маяг
+# FastAPI's Depends()/File()/Form() defaults pattern
 ignore = ["B008"]
 
 [tool.pytest.ini_options]

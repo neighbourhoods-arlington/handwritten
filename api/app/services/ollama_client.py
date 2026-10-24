@@ -1,4 +1,4 @@
-"""Ollama-тай харьцах async wrapper."""
+"""Async wrapper around the Ollama client."""
 
 from functools import lru_cache
 
@@ -15,7 +15,7 @@ def get_ollama() -> AsyncClient:
 
 
 async def is_available() -> bool:
-    """Ollama сервер хариу өгч байгаа эсэх."""
+    """Whether the Ollama server is reachable."""
     s = get_settings()
     try:
         async with httpx.AsyncClient(timeout=3) as client:
@@ -48,7 +48,7 @@ async def chat(messages: list[dict[str, str]], model: str | None = None) -> str:
 
 
 async def describe_image(image_bytes: bytes, prompt: str, model: str | None = None) -> str:
-    """Vision моделиор зураг (жишээ нь гар бичмэл) уншуулах."""
+    """Read an image (e.g. handwriting) with a vision model."""
     s = get_settings()
     resp = await get_ollama().chat(
         model=model or s.ollama_vision_model,

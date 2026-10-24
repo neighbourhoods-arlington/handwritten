@@ -6,14 +6,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# uv — хурдан dependency суулгалт
+# uv — fast dependency installation
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Dependencies-ийг эхэлж суулгаж layer cache ашиглана
+# Install dependencies first to leverage layer caching
 COPY pyproject.toml ./
 RUN uv pip install --system -r pyproject.toml
 
-# Эх код
+# Source code
 COPY alembic.ini ./
 COPY alembic ./alembic
 COPY app ./app

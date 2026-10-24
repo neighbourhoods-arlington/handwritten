@@ -1,10 +1,10 @@
-"""Ollama агент: модель MCP серверийн tool-уудыг дуудаж асуултад хариулна.
+"""Ollama agent: the model answers by calling tools on the MCP server.
 
 Loop:
-  1. MCP серверээс tool жагсаалт авч Ollama формат руу хөрвүүлнэ
-  2. Ollama chat(messages, tools) дуудна
-  3. Модель tool_calls буцаавал тус бүрийг MCP-ээр гүйцэтгэж, role="tool" мессеж болгон нэмнэ
-  4. tool_calls байхгүй болтол (эсвэл max_steps хүртэл) давтана
+  1. Fetch the tool list from the MCP server and convert it to Ollama format
+  2. Call Ollama chat(messages, tools)
+  3. If the model returns tool_calls, execute each via MCP and append role="tool" messages
+  4. Repeat until there are no tool_calls (or max_steps is reached)
 """
 
 import json
@@ -12,7 +12,12 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from app.core.config import get_settings
-from app.services.mcp_client import make_mcp_client, mcp_tools_to_ollama, tool_result_to_text
+from app.services.mcp_client import (
+    make_mcp_client,
+    mcp_tools_to_ollama,
+    normalize_tool_args,
+    tool_result_to_text,
+)
 from app.services.ollama_client import get_ollama
 
 
@@ -68,18 +73,18 @@ async def run_agent(
 
             for call in msg.tool_calls:
                 name = call.function.name
-                args = dict(call.function.arguments or {})
+                args = normalize_tool_args(call.function.arguments)
                 try:
                     result = await mcp.call_tool(name, args)
                     text = tool_result_to_text(result)
                     error = False
-                except Exception as exc:  # моделид алдааг буцааж өөрөө засах боломж өгнө
+                except Exception as exc:  # return the error to the model so it can recover
                     text = json.dumps({"error": str(exc)}, ensure_ascii=False)
                     error = True
                 trace.append(ToolCallTrace(step, name, args, text, error))
                 history.append({"role": "tool", "tool_name": name, "content": text})
 
-    # max_steps дууссан: моделиос tool-гүй эцсийн хариу авна
+    # max_steps exhausted: ask the model for a final answer without tools
     resp = await ollama.chat(model=model, messages=history, stream=False)
     history.append(resp.message.model_dump(exclude_none=True))
     return AgentResult(

@@ -10,20 +10,20 @@ router = APIRouter(prefix="/agent", tags=["agent"])
 
 @router.get("/tools", response_model=list[AgentToolOut])
 async def tools() -> list[AgentToolOut]:
-    """Агентад харагдах MCP tool-ууд (Ollama формат)."""
+    """MCP tools visible to the agent (Ollama format)."""
     async with make_mcp_client() as mcp:
         return [AgentToolOut(**t["function"]) for t in mcp_tools_to_ollama(await mcp.list_tools())]
 
 
 @router.post("/chat", response_model=AgentResponse)
 async def chat(req: AgentRequest) -> AgentResponse:
-    """Ollama модель MCP tool-уудыг ашиглан хариулна."""
+    """Answer using the Ollama model with MCP tools."""
     if req.messages:
         messages = [m.model_dump() for m in req.messages]
     elif req.prompt:
         messages = [{"role": "user", "content": req.prompt}]
     else:
-        raise HTTPException(status_code=422, detail="prompt эсвэл messages өгнө үү")
+        raise HTTPException(status_code=422, detail="Provide either prompt or messages")
 
     try:
         result = await run_agent(

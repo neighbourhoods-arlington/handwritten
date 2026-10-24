@@ -1,12 +1,12 @@
-"""MCP сервер (FastMCP).
+"""MCP server (FastMCP).
 
-Домэйн tool-уудыг (баримт хайх, унших, үүсгэх) MCP протоколоор гаргана.
-Үүнийг дуудах клиентүүд:
-  - Ollama агент (app/services/agent.py) — in-process эсвэл HTTP-ээр
-  - Claude Code / Claude Desktop — HTTP (/mcp) эсвэл stdio
+Exposes domain tools (search, read, create documents) over the MCP protocol.
+Clients that call it:
+  - the Ollama agent (app/services/agent.py) — in-process or over HTTP
+  - Claude Code / Claude Desktop — HTTP (/mcp) or stdio
 
-Хоёр горимоор ажиллана:
-  1. FastAPI дотор HTTP transport-оор mount хийгдэнэ  →  http://localhost:8000/mcp
+Runs in two modes:
+  1. Mounted inside FastAPI with the HTTP transport  →  http://localhost:8000/mcp
   2. Standalone stdio:  python -m app.mcp.server
 """
 
@@ -24,15 +24,15 @@ settings = get_settings()
 mcp = FastMCP(
     settings.mcp_server_name,
     instructions=(
-        "Handwritten төслийн MCP сервер. Гар бичмэлээс таньсан баримтуудыг "
-        "хайх, унших, үүсгэх боломжтой."
+        "MCP server for the Handwritten project. Search, read and create "
+        "documents transcribed from handwriting."
     ),
 )
 
 
 @mcp.tool
 async def list_documents(limit: int = 20) -> list[dict]:
-    """Хамгийн сүүлийн баримтуудын жагсаалт (id, title, created_at)."""
+    """List the most recent documents (id, title, created_at)."""
     async with SessionLocal() as session:
         result = await session.execute(
             select(Document).order_by(Document.created_at.desc()).limit(limit)
@@ -45,7 +45,7 @@ async def list_documents(limit: int = 20) -> list[dict]:
 
 @mcp.tool
 async def get_document(doc_id: str) -> dict:
-    """Нэг баримтыг id-аар бүтнээр нь авах."""
+    """Get a single document by id, including its content."""
     async with SessionLocal() as session:
         doc = await session.get(Document, uuid.UUID(doc_id))
         if doc is None:
@@ -61,7 +61,7 @@ async def get_document(doc_id: str) -> dict:
 
 @mcp.tool
 async def create_document(title: str, content: str = "", source_path: str | None = None) -> dict:
-    """Шинэ баримт үүсгэх."""
+    """Create a new document."""
     async with SessionLocal() as session:
         doc = Document(title=title, content=content, source_path=source_path)
         session.add(doc)
@@ -72,7 +72,7 @@ async def create_document(title: str, content: str = "", source_path: str | None
 
 @mcp.tool
 async def search_documents(query: str, limit: int = 10) -> list[dict]:
-    """Гарчиг болон агуулгаас текст хайх (ILIKE)."""
+    """Search title and content for text (case-insensitive)."""
     async with SessionLocal() as session:
         pattern = f"%{query}%"
         result = await session.execute(
@@ -86,7 +86,7 @@ async def search_documents(query: str, limit: int = 10) -> list[dict]:
 
 @mcp.resource("handwritten://config")
 def server_config() -> dict:
-    """Серверийн идэвхтэй тохиргоо (нууц үггүй)."""
+    """Active server configuration (no secrets)."""
     return {
         "app_env": settings.app_env,
         "ollama_base_url": settings.ollama_base_url,
@@ -96,8 +96,8 @@ def server_config() -> dict:
 
 
 @mcp.prompt
-def transcribe_prompt(language: str = "Mongolian") -> str:
-    """Гар бичмэл таних prompt."""
+def transcribe_prompt(language: str = "English") -> str:
+    """Prompt for transcribing handwriting."""
     return (
         f"You are an expert at reading {language} handwriting. "
         "Transcribe the text exactly, preserving line breaks. "

@@ -33,8 +33,8 @@ class Settings(BaseSettings):
     # MCP
     mcp_server_name: str = "handwritten-mcp"
     mcp_mount_path: str = "/mcp"
-    # Агент аль MCP серверт холбогдох вэ. Хоосон бол өөрийн серверт in-process холбогдоно.
-    # Жишээ: http://localhost:8000/mcp  эсвэл гадны MCP серверийн URL
+    # MCP server the agent connects to. Empty = this app's own server, in-process.
+    # Example: http://localhost:8000/mcp or any external MCP server URL
     mcp_client_url: str = ""
 
     # Agent (Ollama → MCP tools)

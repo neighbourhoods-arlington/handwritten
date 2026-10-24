@@ -12,7 +12,7 @@ router = APIRouter(prefix="/llm", tags=["llm"])
 async def models() -> dict:
     try:
         return {"models": await ollama_client.list_models()}
-    except Exception as exc:  # Ollama унтраалттай байх магадлалтай
+    except Exception as exc:  # Ollama is probably down
         raise HTTPException(status_code=503, detail=f"Ollama unavailable: {exc}") from exc
 
 
@@ -42,7 +42,7 @@ async def ocr(
     prompt: str = Form("Transcribe the handwritten text in this image exactly."),
     model: str | None = Form(None),
 ) -> LLMResponse:
-    """Vision моделиор гар бичмэл зургийг текст болгох."""
+    """Transcribe a handwriting image to text with a vision model."""
     s = get_settings()
     data = await image.read()
     try:

@@ -36,3 +36,10 @@ async def test_mcp_tools_convert_to_ollama_format():
     by_name = {t["function"]["name"]: t["function"] for t in tools}
     assert by_name["search_documents"]["parameters"]["type"] == "object"
     assert "query" in by_name["search_documents"]["parameters"]["properties"]
+
+
+def test_normalize_tool_args_drops_nulls():
+    from app.services.mcp_client import normalize_tool_args
+
+    assert normalize_tool_args({"limit": None, "query": "x"}) == {"query": "x"}
+    assert normalize_tool_args(None) == {}

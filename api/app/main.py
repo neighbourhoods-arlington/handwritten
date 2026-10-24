@@ -10,14 +10,14 @@ from app.mcp.server import mcp
 
 settings = get_settings()
 
-# FastMCP ASGI app. Дотоод path нь /mcp, root-д mount хийснээр
-# http://host/mcp хаяг redirect-гүй шууд ажиллана.
+# FastMCP ASGI app. Its internal path is /mcp and it is mounted at the root,
+# so http://host/mcp works without a redirect.
 mcp_app = mcp.http_app(path=settings.mcp_mount_path)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # MCP session manager-ийн lifespan-ийг хамт ажиллуулах шаардлагатай
+    # The MCP session manager's lifespan must run alongside the app's
     async with mcp_app.lifespan(app):
         yield
     await engine.dispose()
@@ -51,5 +51,5 @@ async def root() -> dict:
     }
 
 
-# Хамгийн сүүлд mount хийнэ: FastAPI route-уудад таараагүй хүсэлт л энд ирнэ
+# Mounted last: only requests that match no FastAPI route end up here
 app.mount("/", mcp_app)

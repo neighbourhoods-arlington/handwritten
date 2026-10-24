@@ -9,7 +9,7 @@ from app.core.db import Base
 
 
 class Document(Base):
-    """Гар бичмэлээс таньсан текстийн бичлэг."""
+    """A document transcribed from handwriting."""
 
     __tablename__ = "documents"
 

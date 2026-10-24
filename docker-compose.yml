@@ -1,5 +1,5 @@
-# Root-ээс ажиллуулна:  docker compose up -d --build
-# Тохиргоо:             cp .env.example .env && cp api/.env.example api/.env
+# Run from the repo root:  docker compose up -d --build
+# Setup:                   cp .env.example .env && cp api/.env.example api/.env
 services:
   db:
     image: postgres:17-alpine
@@ -26,7 +26,7 @@ services:
     restart: unless-stopped
     env_file:
       - ./api/.env
-    # Доорх утгууд api/.env-ийн утгыг дарна (контейнер дотор хостын нэр өөр)
+    # These override api/.env (hostnames differ inside the compose network)
     environment:
       POSTGRES_HOST: db
       POSTGRES_PORT: "5432"
@@ -37,20 +37,20 @@ services:
     ports:
       - "${API_PORT:-8000}:8000"
     volumes:
-      # Hot reload-д зориулж эх кодыг mount хийнэ
+      # Mount source for hot reload
       - ./api/app:/app/app
       - ./api/alembic:/app/alembic
     depends_on:
       db:
         condition: service_healthy
     extra_hosts:
-      # Linux дээр хостын Ollama-г host.docker.internal-аар дуудах
+      # Lets Linux hosts reach host Ollama via host.docker.internal
       - "host.docker.internal:host-gateway"
     command: >
       sh -c "alembic upgrade head &&
              uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
-  # web/ дотор frontend сонгосны дараа идэвхжүүлнэ (web/README.md харах)
+  # Enable once a frontend is set up in web/ (see web/README.md)
   # web:
   #   build:
   #     context: ./web
@@ -62,9 +62,9 @@ services:
   #   depends_on:
   #     - api
 
-  # Сонголттой: Ollama-г контейнерт ажиллуулах
+  # Optional: run Ollama in a container
   #   docker compose --profile ollama up -d
-  #   root .env дотор OLLAMA_BASE_URL_DOCKER=http://ollama:11434
+  #   root .env: OLLAMA_BASE_URL_DOCKER=http://ollama:11434
   ollama:
     image: ollama/ollama:latest
     container_name: handwritten-ollama

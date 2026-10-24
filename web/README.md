@@ -1,18 +1,18 @@
 # web
 
-Frontend апп энд байрлана. Framework хараахан сонгогдоогүй байгаа тул
-хоосон placeholder. Сонголт хийсний дараа:
+The frontend lives here. No framework has been chosen yet, so this is an empty
+placeholder. Once you pick one:
 
 ```bash
-# Жишээ: Vite + React
+# Example: Vite + React
 cd web && npm create vite@latest . -- --template react-ts
 
-# Жишээ: Next.js
+# Example: Next.js
 cd web && npx create-next-app@latest .
 ```
 
-Дараа нь:
+Then:
 
-1. `web/.env.example`-д байгаа хувьсагчдаас framework-дээ тохирохыг үлдээж `.env` болгон хуулна.
-2. `Dockerfile` үүсгэж, root `docker-compose.yml` доторх `web` сервисийн коммент-ийг нээнэ.
-3. API-г `http://localhost:8000/api/v1` хаягаар дуудна (CORS-д `localhost:3000`, `localhost:5173` зөвшөөрөгдсөн).
+1. Keep the variables in `web/.env.example` that match your framework and copy it to `.env`.
+2. Add a `Dockerfile` and uncomment the `web` service in the root `docker-compose.yml`.
+3. Call the API at `http://localhost:8000/api/v1` (CORS allows `localhost:3000` and `localhost:5173`).
