@@ -19,6 +19,16 @@ async def test_root_lists_mcp_mount():
     assert r.json()["mcp"] == "/mcp"
 
 
+async def test_upload_page():
+    async with app.router.lifespan_context(app):
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+            r = await c.get("/upload")
+    assert r.status_code == 200
+    assert "text/html" in r.headers["content-type"]
+    assert 'type="file"' in r.text
+    assert 'id="renew"' in r.text
+
+
 async def test_mcp_tools_registered():
     from app.mcp.server import mcp
 

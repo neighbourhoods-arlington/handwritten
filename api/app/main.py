@@ -7,6 +7,7 @@ from app.api.router import api_router
 from app.core.config import get_settings
 from app.core.db import engine
 from app.mcp.server import mcp
+from app.pages import upload
 
 settings = get_settings()
 
@@ -39,6 +40,7 @@ app.add_middleware(
 )
 
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(upload.router)
 
 
 @app.get("/", include_in_schema=False)
