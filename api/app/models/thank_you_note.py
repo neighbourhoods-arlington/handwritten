@@ -1,6 +1,7 @@
 from datetime import date, datetime
 
 from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, Index, Integer, Text, func, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
@@ -49,6 +50,12 @@ class ThankYouNote(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+    # Letter generation (migration 0003)
+    share_token: Mapped[str | None] = mapped_column(Text, unique=True, nullable=True)
+    badge_key: Mapped[str | None] = mapped_column(Text, nullable=True)
+    impact_key: Mapped[str | None] = mapped_column(Text, nullable=True)
+    llm_model: Mapped[str | None] = mapped_column(Text, nullable=True)
+    checks: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     donor: Mapped["Donor"] = relationship(back_populates="notes")  # noqa: F821
     gift: Mapped["Gift | None"] = relationship(back_populates="notes")  # noqa: F821

@@ -67,14 +67,73 @@ export interface DonorListResponse {
   offset: number;
 }
 
-export interface SayThankYouResponse {
-  note_id: number;
-  status: string;
-  batch_week: string;
-  gift_id: number;
-  gift_date: string;
-  amount: string;
+export interface LetterChecks {
+  issues: string[];
   warnings: string[];
+  attempts: number;
+  tool_calls: string[];
+}
+
+export interface LetterNote {
+  note_id: number;
+  donor_id: number;
+  gift_id: number | null;
+  batch_week: string;
+  body: string | null;
+  status: string;
+  approved_by: string | null;
+  sent_at: string | null;
+  created_at: string;
+  share_token: string | null;
+  badge_key: string | null;
+  impact_key: string | null;
+  llm_model: string | null;
+  checks: LetterChecks | null;
+}
+
+export interface LetterBadge {
+  key: string;
+  title: string;
+  meaning: string;
+}
+
+export interface LetterResponse {
+  note: LetterNote;
+  gift: {
+    gift_id: number;
+    gift_date: string;
+    amount: string;
+    fund: string | null;
+    campaign: string | null;
+    receipt_note: string | null;
+  };
+  donor: {
+    donor_id: number;
+    first_name: string;
+    last_name: string;
+    address_line: string | null;
+    city: string | null;
+    state: string | null;
+    zip: string | null;
+  };
+  badge: LetterBadge | null;
+  impact_text: string | null;
+  share_url: string | null;
+  qr_url: string | null;
+  created: boolean;
+  generated: boolean;
+  needs_attention: boolean;
+  warnings: string[];
+}
+
+export interface PublicLetter {
+  first_name: string;
+  badge: LetterBadge | null;
+  greeting: string | null;
+  impact_text: string | null;
+  closing: string | null;
+  status: string;
+  donate_link: string;
 }
 
 export class ApiError extends Error {
@@ -122,8 +181,16 @@ export const api = {
     if (q) params.set("q", q);
     return request<DonorListResponse>(env, `/donors?${params}`);
   },
+  /** Existing letter for the donor (404 → ApiError when there is none). */
+  getLetter: (env: EnvReader | undefined, donorId: number) =>
+    request<LetterResponse>(env, `/donors/${donorId}/thank-you`),
+  /** Returns the existing letter or drafts a new one with Ollama + MCP tools (slow). */
   sayThankYou: (env: EnvReader | undefined, donorId: number) =>
-    request<SayThankYouResponse>(env, `/donors/${donorId}/thank-you`, { method: "POST" }),
+    request<LetterResponse>(env, `/donors/${donorId}/thank-you`, { method: "POST" }),
+  publicLetter: (env: EnvReader | undefined, token: string) =>
+    request<PublicLetter>(env, `/public/t/${encodeURIComponent(token)}`),
+  /** Absolute URL for the browser (QR image etc.). */
+  publicUrl: (path: string) => `${apiBase()}${path.replace(/^\/api\/v1/, "")}`,
   agentChat: (env: EnvReader | undefined, prompt: string) =>
     request<AgentResponse>(env, "/agent/chat", {
       method: "POST",

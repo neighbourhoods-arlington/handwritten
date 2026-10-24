@@ -74,16 +74,3 @@ class DonorListResponse(BaseModel):
     total: int
     limit: int
     offset: int
-
-
-class SayThankYouResponse(BaseModel):
-    """Result of "Say thank-you": the new draft note and the gift it thanks."""
-
-    note_id: int
-    status: str
-    batch_week: date
-    gift_id: int
-    gift_date: date
-    amount: Decimal
-    # Non-blocking explanations for staff (e.g. a recent thank-you within the cooldown)
-    warnings: list[str]

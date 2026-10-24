@@ -2,7 +2,7 @@ import { component$, Slot } from "@builder.io/qwik";
 import { Link, useLocation } from "@builder.io/qwik-city";
 
 const NAV = [
-  { href: "/", label: "Home" },
+  { href: "/", label: "Overview" },
   { href: "/donors/", label: "Donors" },
 ];
 
@@ -11,9 +11,9 @@ export default component$(() => {
   return (
     <>
       <header class="site-header">
-        <nav class="container nav">
+        <nav class="nav" aria-label="Main">
           <Link href="/" class="brand">
-            Handwritten
+            Phoenix Bikes <span>thank-you notes</span>
           </Link>
           <ul>
             {NAV.map((item) => (

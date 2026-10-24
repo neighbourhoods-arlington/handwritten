@@ -1,8 +1,10 @@
-import { component$ } from "@builder.io/qwik";
+import { component$, isBrowser, useTask$ } from "@builder.io/qwik";
 import {
   Form,
+  Link,
   routeAction$,
   routeLoader$,
+  useNavigate,
   type DocumentHead,
 } from "@builder.io/qwik-city";
 import { api, ApiError, type DonorListItem } from "~/lib/api";
@@ -27,16 +29,17 @@ export const useDonors = routeLoader$(async ({ env, query }) => {
   }
 });
 
-/** "Say thank-you": asks the API to draft a note for the donor's latest un-thanked direct gift. */
+/** "Say thank-you": returns the donor's letter, drafting it with Ollama + MCP tools if needed.
+ *  On success the component navigates to the letter page; refusals are shown on the row. */
 export const useSayThankYou = routeAction$(async (data, { env }) => {
   const donorId = Number(data.donor_id);
   try {
-    const res = await api.sayThankYou(env, donorId);
+    await api.sayThankYou(env, donorId);
     return {
       donorId,
       ok: true,
-      message: `Draft note #${res.note_id} created for the $${res.amount} gift on ${res.gift_date}.`,
-      warnings: res.warnings,
+      message: null as string | null,
+      warnings: [] as string[],
     };
   } catch (e) {
     const detail = e instanceof ApiError ? e.detail : (e as Error).message;
@@ -44,138 +47,182 @@ export const useSayThankYou = routeAction$(async (data, { env }) => {
   }
 });
 
-const money = (v: string | null) =>
+const money = (v: string | number | null) =>
   v == null
     ? "—"
-    : `$${Number(v).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+    : "$" + Number(v).toLocaleString("en-US", { maximumFractionDigits: 0 });
+
+const day = (s: string | null) =>
+  s
+    ? new Date(s).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "never";
 
 export default component$(() => {
   const donors = useDonors();
   const sayThankYou = useSayThankYou();
   const { items, total, q, error } = donors.value;
   const result = sayThankYou.value;
+  const nav = useNavigate();
+
+  // Open the letter page once a draft exists (action redirects don't carry over route data)
+  useTask$(({ track }) => {
+    const v = track(() => sayThankYou.value);
+    if (isBrowser && v?.ok) nav(`/donors/${v.donorId}/letter/`);
+  });
 
   return (
     <main class="container">
       <h1>Donors</h1>
 
-      <form method="get" class="search">
-        <input
-          type="search"
-          name="q"
-          value={q}
-          placeholder="Search name, account number or email"
-        />
-        <button type="submit">Search</button>
-      </form>
+      <div class="bar">
+        <form method="get" role="search">
+          <input
+            type="search"
+            name="q"
+            value={q}
+            aria-label="Search donors"
+            placeholder="Search by name, account number or email"
+          />
+          <button type="submit">Search</button>
+        </form>
+        <span class="count">
+          {total} donor{total === 1 ? "" : "s"}
+          {q ? ` matching “${q}”` : ""}
+        </span>
+      </div>
 
       {error && <p class="error">Could not load donors: {error}</p>}
 
-      <p class="muted">
-        {total} donor{total === 1 ? "" : "s"}
-        {q ? ` matching "${q}"` : ""}
-      </p>
-
-      <table class="donors">
-        <thead>
-          <tr>
-            <th>Donor</th>
-            <th>Account</th>
-            <th class="num">Gifts</th>
-            <th class="num">Total</th>
-            <th>Last gift</th>
-            <th>Status</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((d) => {
-            const rowResult = result?.donorId === d.donor_id ? result : null;
-            const queued = !!d.pending_note_status || rowResult?.ok;
-            return (
-              <tr key={d.donor_id}>
-                <td>
-                  <strong>
-                    {d.first_name} {d.last_name}
-                  </strong>
-                  <div class="muted small">
-                    {d.email ?? "no email"}
-                    {d.city
-                      ? ` · ${d.city}${d.state ? `, ${d.state}` : ""}`
-                      : ""}
-                  </div>
-                </td>
-                <td class="mono">{d.account_number}</td>
-                <td class="num">
-                  {d.gift_count}
-                  <div class="muted small">{d.direct_gift_count} direct</div>
-                </td>
-                <td class="num">{money(d.total_given)}</td>
-                <td>{d.last_gift_date ?? "—"}</td>
-                <td>
-                  {d.raise_ride_only && (
-                    <span class="tag warn">Raise + Ride only</span>
-                  )}
-                  {!d.has_address && (
-                    <span class="tag warn">No mailing address</span>
-                  )}
-                  {d.pending_note_status && (
-                    <span class="tag info">
-                      Note #{d.pending_note_id} {d.pending_note_status}
-                    </span>
-                  )}
-                  {rowResult && (
-                    <div
-                      class={{
-                        small: true,
-                        ok: rowResult.ok,
-                        error: !rowResult.ok,
-                      }}
-                    >
-                      {rowResult.message}
-                      {rowResult.warnings.map((w) => (
-                        <div key={w} class="warn-text">
-                          {w}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </td>
-                <td>
-                  <Form action={sayThankYou}>
-                    <input type="hidden" name="donor_id" value={d.donor_id} />
-                    <button
-                      type="submit"
-                      class="primary"
-                      disabled={sayThankYou.isRunning || queued}
-                      title={
-                        queued
-                          ? "This donor already has an open thank-you note"
-                          : "Draft a thank-you note for this donor's latest direct gift"
-                      }
-                    >
-                      Say thank-you
-                    </button>
-                  </Form>
-                </td>
+      {items.length === 0 && !error ? (
+        <div class="empty">
+          {q
+            ? `No donors match “${q}”.`
+            : "No donors yet. Import a Bloomerang export to get started."}
+        </div>
+      ) : (
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Donor</th>
+                <th>Account</th>
+                <th class="num">Gifts</th>
+                <th class="num">Given</th>
+                <th>Last gift</th>
+                <th>Status</th>
+                <th></th>
               </tr>
-            );
-          })}
-          {items.length === 0 && !error && (
-            <tr>
-              <td colSpan={7} class="muted">
-                No donors yet. Import a Bloomerang export to get started.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            </thead>
+            <tbody>
+              {items.map((d) => {
+                const rowResult =
+                  result?.donorId === d.donor_id ? result : null;
+                const queued = !!d.pending_note_status || rowResult?.ok;
+                return (
+                  <tr key={d.donor_id} class={{ rr: d.raise_ride_only }}>
+                    <td>
+                      <div class="name">
+                        {d.first_name} {d.last_name}
+                      </div>
+                      <div class="muted small">
+                        {d.email ?? "no email"}
+                        {d.city
+                          ? ` · ${d.city}${d.state ? `, ${d.state}` : ""}`
+                          : ""}
+                      </div>
+                    </td>
+                    <td class="mono">{d.account_number}</td>
+                    <td class="num">
+                      {d.gift_count}
+                      <div class="muted small">
+                        {d.direct_gift_count} direct
+                      </div>
+                    </td>
+                    <td class="num">
+                      {money(d.total_given)}
+                      <div class="muted small">
+                        {money(d.direct_total)} direct
+                      </div>
+                    </td>
+                    <td class="nowrap">{day(d.last_gift_date)}</td>
+                    <td>
+                      {d.raise_ride_only && (
+                        <span class="tag warn">Raise + Ride only</span>
+                      )}
+                      {!d.has_address && (
+                        <span class="tag warn">No mailing address</span>
+                      )}
+                      {d.pending_note_status && (
+                        <Link
+                          href={`/donors/${d.donor_id}/letter/`}
+                          class="tag info"
+                        >
+                          Letter #{d.pending_note_id} {d.pending_note_status}
+                        </Link>
+                      )}
+                      {!d.raise_ride_only &&
+                        d.has_address &&
+                        !d.pending_note_status && (
+                          <span class="tag go">Ready</span>
+                        )}
+                      {rowResult && (
+                        <div class={rowResult.ok ? "ok" : "issue"}>
+                          {rowResult.message}
+                          {rowResult.warnings.map((w) => (
+                            <div key={w} class="warn-text">
+                              {w}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                    <td class="actions">
+                      {queued ? (
+                        <Link
+                          href={`/donors/${d.donor_id}/letter/`}
+                          class="btn"
+                        >
+                          View letter
+                        </Link>
+                      ) : (
+                        <Form action={sayThankYou}>
+                          <input
+                            type="hidden"
+                            name="donor_id"
+                            value={d.donor_id}
+                          />
+                          <button
+                            type="submit"
+                            class="primary"
+                            disabled={sayThankYou.isRunning}
+                            title="Draft a thank-you letter for this donor's latest direct gift"
+                          >
+                            {sayThankYou.isRunning &&
+                            sayThankYou.formData?.get("donor_id") ===
+                              String(d.donor_id)
+                              ? "Drafting…"
+                              : "Say thank-you"}
+                          </button>
+                        </Form>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </main>
   );
 });
 
 export const head: DocumentHead = {
-  title: "Donors · Handwritten",
+  title: "Donors · Phoenix Bikes thank-you notes",
   meta: [
     {
       name: "description",
