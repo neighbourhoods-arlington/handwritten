@@ -13,11 +13,28 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./datasets/db/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-handwritten} -d ${POSTGRES_DB:-handwritten}"]
       interval: 5s
       timeout: 5s
       retries: 10
+
+  loader:
+    build: ./datasets/loader
+    container_name: handwritten-loader
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-handwritten}:${POSTGRES_PASSWORD:-handwritten}@db:5432/${POSTGRES_DB:-handwritten}
+    volumes:
+      - ./data:/data
+    restart: "no"
+    command:
+      - sh
+      - -c
+      - python generate_fake_data.py --out /data && python load_to_postgres.py --csv /data/bloomerang_export_fake.csv --history-csv /data/past_notes_fake.csv
 
   api:
     build:
