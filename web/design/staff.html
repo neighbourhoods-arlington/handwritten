@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thank-you notes · Phoenix Bikes staff</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Caveat:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#22282C;--muted:#5E676D;--paper:#F3F4F1;--card:#FFFDF6;--line:#D9DBD5;
+  --reflector:#F5C518;--go:#2F7A4D;--warn:#B4462B;--pen:#1E3A8A;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--ink:#E9ECEA;--muted:#A4ADB2;--paper:#171B1E;--card:#23292D;
+  --line:#363E43;--go:#5FBF86;--warn:#E3826A;--pen:#9DB7FF;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 "Atkinson Hyperlegible",system-ui,sans-serif}
+header{padding:16px 24px;border-bottom:4px solid var(--reflector);display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+header h1{font-size:21px;margin:0}
+header h1 a{color:inherit;text-decoration:none}
+header h1 span{font-weight:400;color:var(--muted)}
+.who{font-size:14px;color:var(--muted)}
+main{max-width:1100px;margin:0 auto;padding:24px}
+button,.btn{font:inherit;font-size:15px;padding:8px 14px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;text-decoration:none;display:inline-block}
+:focus-visible{outline:3px solid var(--reflector);outline-offset:2px}
+.primary{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:700}
+.approve{border-color:var(--go);color:var(--go);font-weight:700}
+.reject{color:var(--warn)}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+.tabs button[aria-pressed=true]{background:var(--reflector);border-color:var(--reflector);color:#22282C;font-weight:700}
+.count{color:var(--muted);font-size:15px;margin-left:auto}
+.empty{padding:48px 24px;text-align:center;border:2px dashed var(--line);border-radius:10px;color:var(--muted)}
+.note{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:22px;padding:22px 0;border-bottom:1px solid var(--line)}
+.card{background:var(--card);border-radius:4px;padding:20px 24px;box-shadow:0 1px 0 var(--line),0 6px 18px -12px rgba(0,0,0,.35)}
+.card textarea{width:100%;min-height:200px;border:0;background:transparent;resize:vertical;color:var(--pen);font:25px/1.25 Caveat,cursive}
+.card textarea[readonly]{resize:none}
+.note.approved .card,.note.sent .card{outline:3px solid var(--go)}
+.note.rejected{opacity:.5}
+.chars{font-size:13px;color:var(--muted);text-align:right}
+.side h3{margin:0 0 4px;font-size:18px}
+.side h3 a{color:inherit}
+dl{display:grid;grid-template-columns:auto 1fr;gap:2px 14px;margin:8px 0 12px;font-size:14px}
+dt{color:var(--muted)} dd{margin:0}
+.issue{color:var(--warn);font-weight:700;margin:4px 0;font-size:14px}
+.ok{color:var(--go);font-size:14px;margin:4px 0}
+.status{font-size:14px;font-weight:700}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+/* donor page */
+.back{margin-bottom:16px}
+.profile{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:28px}
+.profile h2{font-size:28px;margin:0 0 4px}
+.addr{color:var(--muted);margin:0 0 16px}
+.figures{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.fig{background:var(--card);border-radius:6px;padding:12px 14px}
+.fig b{display:block;font-size:24px}
+.fig span{font-size:13px;color:var(--muted)}
+.why{background:var(--card);border-left:4px solid var(--reflector);padding:12px 16px;border-radius:4px}
+.why h3{margin:0 0 6px;font-size:16px}
+.why ul{margin:0;padding-left:18px;font-size:15px}
+.pass{color:var(--go)} .fail{color:var(--warn)}
+section h3{font-size:18px;margin:0 0 8px}
+.tablewrap{overflow-x:auto;margin-bottom:24px}
+table{width:100%;border-collapse:collapse;font-size:14px;background:var(--card);border-radius:6px}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:400}
+.rr{color:var(--muted)}
+.letter{font:21px/1.25 Caveat,cursive;color:var(--pen);background:var(--card);padding:14px 18px;border-radius:4px;margin:0 0 4px}
+.lettermeta{font-size:13px;color:var(--muted);margin:0 0 16px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:6px;display:none;max-width:90vw;z-index:9}
+.mock{background:var(--reflector);color:#22282C;font-size:13px;padding:4px 24px}
+@media (max-width:760px){.note,.profile{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="mock" id="mockbar" hidden>Demo mode: fake data, nothing is saved.</div>
+<header>
+  <h1><a href="#/">Phoenix Bikes <span>thank-you notes</span></a></h1>
+  <div class="who">Reviewing as <b id="who"></b> <button id="changewho">Change</button></div>
+</header>
+<main id="app"></main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+// ---------- Settings ----------
+const API = "";                       // same origin as FastAPI; e.g. "http://localhost:8000" if served elsewhere
+const MOCK = new URLSearchParams(location.search).has("mock");
+const RULES = { maxAmount: 100, maxDirectGifts: 3, minDaysSinceNote: 180 }; // keep in sync with eligible_gifts()
+const DONATE = "phoenixbikes.org/donate", MAX_CHARS = 520;
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const money = n => "$" + Number(n).toLocaleString("en-US", {maximumFractionDigits: 0});
+const day = s => s ? new Date(s).toLocaleDateString("en-US", {month: "short", day: "numeric", year: "numeric"}) : "never";
+function toast(m){ const t=$("#toast"); t.textContent=m; t.style.display="block"; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display="none",3500); }
+
+// ---------- Reviewer name (needed for approved_by) ----------
+function store(k, v){ try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch { return null; } }
+let reviewer = store("reviewer") || "";
+function askReviewer(){
+  const n = prompt("Your name (saved as the approver):", reviewer);
+  if (n && n.trim()) { reviewer = n.trim(); store("reviewer", reviewer); }
+  $("#who").textContent = reviewer || "nobody yet";
+}
+$("#changewho").onclick = askReviewer;
+$("#who").textContent = reviewer || "nobody yet";
+
+// ---------- Checks shown before approving ----------
+function issues(body){
+  const out = [];
+  if (!body.includes(DONATE)) out.push("Missing " + DONATE);
+  if (body.length > MAX_CHARS) out.push(`Too long for one card (${body.length}/${MAX_CHARS})`);
+  if (/[\[\]{}]/.test(body)) out.push("Has a leftover placeholder bracket");
+  return out;
+}
+
+// ---------- API (real or mock) ----------
+async function call(path, opt = {}){
+  if (MOCK) return mock(path, opt);
+  const r = await fetch(API + path, {...opt, headers: {"Content-Type": "application/json", ...(opt.headers||{})}});
+  if (!r.ok) { const e = await r.json().catch(() => ({detail: r.statusText})); throw new Error(typeof e.detail === "string" ? e.detail : JSON.stringify(e.detail)); }
+  return r.json();
+}
+
+// ---------- Review page ----------
+let filter = "draft", notes = [];
+async function reviewPage(){
+  $("#app").innerHTML = `
+    <div class="bar">
+      <div class="tabs bar" role="group" aria-label="Filter notes">
+        ${["draft","approved","rejected","sent"].map(s=>`<button data-f="${s}" aria-pressed="${s===filter}">${s[0].toUpperCase()+s.slice(1)}</button>`).join("")}
+      </div>
+      <span class="count" id="count"></span>
+      <button class="primary" id="export">Export approved for the robot</button>
+    </div>
+    <div id="list"><div class="empty">Loading notes…</div></div>`;
+  document.querySelectorAll("[data-f]").forEach(b => b.onclick = () => { filter = b.dataset.f; reviewPage(); });
+  $("#export").onclick = exportCsv;
+  try { notes = await call(`/api/notes?status=${filter}`); renderNotes(); }
+  catch(e){ $("#list").innerHTML = `<div class="empty">Could not load notes: ${esc(e.message)}. Is FastAPI running? Try <a href="?mock=1">demo mode</a>.</div>`; }
+}
+
+function renderNotes(){
+  $("#count").textContent = `${notes.length} ${filter}`;
+  if (!notes.length) { $("#list").innerHTML = `<div class="empty">No ${filter} notes right now.</div>`; return; }
+  $("#list").innerHTML = notes.map(n => {
+    const g = n.gift || {}, iss = issues(n.body || ""), locked = n.status === "sent";
+    return `<article class="note ${n.status}" data-id="${n.note_id}">
+      <div>
+        <div class="card"><textarea aria-label="Note to ${esc(n.first_name)}" ${locked?"readonly":""}>${esc(n.body)}</textarea></div>
+        <div class="chars">${(n.body||"").length} / ${MAX_CHARS} characters</div>
+      </div>
+      <div class="side">
+        <h3><a href="#/donor/${n.donor_id}">${esc(n.first_name)} ${esc(n.last_name)}</a></h3>
+        <dl>
+          <dt>Gift</dt><dd>${money(g.amount)} to ${esc(g.fund)}</dd>
+          <dt>Date</dt><dd>${day(g.gift_date)}</dd>
+          <dt>Came via</dt><dd>${esc(g.appeal)} (${esc(g.campaign)})</dd>
+          ${n.first_gift ? `<dt>Note</dt><dd>First gift ever</dd>` : ""}
+          ${g.receipt_note ? `<dt>Donor wrote</dt><dd>${esc(g.receipt_note)}</dd>` : ""}
+          ${n.approved_by ? `<dt>Approved by</dt><dd>${esc(n.approved_by)}</dd>` : ""}
+        </dl>
+        ${iss.length ? iss.map(i=>`<p class="issue">${esc(i)}</p>`).join("") : `<p class="ok">Ready for the robot</p>`}
+        ${locked ? `<p class="status">Sent ${day(n.sent_at)}</p>` : `
+        <div class="actions">
+          ${n.status==="approved"
+            ? `<button data-act="draft">Undo approval</button>`
+            : `<button class="approve" data-act="approve">Approve</button>`}
+          <button data-act="save">Save edits</button>
+          <button data-act="regen">Rewrite</button>
+          ${n.status==="rejected" ? `<button data-act="draft">Restore</button>` : `<button class="reject" data-act="reject">Reject</button>`}
+        </div>`}
+      </div></article>`;
+  }).join("");
+}
+
+$("#app").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-act]"); if (!b) return;
+  const art = b.closest(".note"), id = +art.dataset.id, i = notes.findIndex(n => n.note_id === id);
+  const body = art.querySelector("textarea").value, act = b.dataset.act;
+  try {
+    let upd;
+    if (act === "regen") { b.textContent = "Rewriting…"; b.disabled = true; upd = await call(`/api/notes/${id}/regenerate`, {method: "POST"}); }
+    else {
+      const payload = {body};
+      if (act === "approve") {
+        const iss = issues(body); if (iss.length) { toast("Fix first: " + iss.join("; ")); return; }
+        if (!reviewer) askReviewer(); if (!reviewer) { toast("Add your name to approve"); return; }
+        Object.assign(payload, {status: "approved", approved_by: reviewer});
+      }
+      if (act === "reject") payload.status = "rejected";
+      if (act === "draft") payload.status = "draft";
+      upd = await call(`/api/notes/${id}`, {method: "PATCH", body: JSON.stringify(payload)});
+    }
+    toast({approve:"Approved", reject:"Rejected", draft:"Moved back to draft", save:"Edits saved", regen:"Rewritten"}[act]);
+    if (upd.status !== filter) notes.splice(i, 1); else notes[i] = {...notes[i], ...upd};
+    renderNotes();
+  } catch(err){ toast(err.message); b.disabled = false; renderNotes(); }
+});
+
+async function exportCsv(){
+  if (MOCK) return toast("Demo mode: export would download the robot CSV here");
+  const r = await fetch(API + "/api/export.csv");
+  if (!r.ok) { const e = await r.json().catch(()=>({detail:r.statusText})); return toast(e.detail); }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(await r.blob());
+  a.download = `robot-notes-${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  toast("Exported. Those notes are now marked sent."); if (filter === "approved") reviewPage();
+}
+
+// ---------- Donor summary page ----------
+async function donorPage(id){
+  $("#app").innerHTML = `<a class="btn back" href="#/">Back to notes</a><div class="empty">Loading donor…</div>`;
+  let d; try { d = await call(`/api/donors/${id}`); }
+  catch(e){ $("#app").innerHTML = `<a class="btn back" href="#/">Back to notes</a><div class="empty">Could not load donor: ${esc(e.message)}</div>`; return; }
+  const p = d.donor, s = d.summary;
+  const daysSince = s.last_note_sent_at ? Math.floor((Date.now() - new Date(s.last_note_sent_at)) / 864e5) : null;
+  const recent = d.gifts.find(g => g.channel === "direct");
+  const checks = [
+    [!s.raise_ride_only, s.raise_ride_only ? "Gave only through Raise + Ride" : "Has a direct gift (not only Raise + Ride)"],
+    [recent && recent.amount <= RULES.maxAmount, recent ? `Latest direct gift ${money(recent.amount)} (small = ${money(RULES.maxAmount)} or less)` : "No direct gift"],
+    [s.direct_gift_count <= RULES.maxDirectGifts, `${s.direct_gift_count} direct gifts ever (infrequent = ${RULES.maxDirectGifts} or fewer)`],
+    [daysSince === null || daysSince >= RULES.minDaysSinceNote, daysSince === null ? "Never received a note" : `Last note ${daysSince} days ago (wait ${RULES.minDaysSinceNote})`],
+    [!!p.address_line, p.address_line ? "Has a mailing address" : "No mailing address"],
+  ];
+  $("#app").innerHTML = `
+    <a class="btn back" href="#/">Back to notes</a>
+    <div class="profile">
+      <aside>
+        <h2>${esc(p.first_name)} ${esc(p.last_name)}</h2>
+        <p class="addr">${esc(p.address_line)}<br>${esc(p.city)}, ${esc(p.state)} ${esc(p.zip)}<br>${esc(p.email)}<br>Account ${esc(p.account_number)}</p>
+        <div class="figures">
+          <div class="fig"><b>${money(s.direct_total || 0)}</b><span>given directly</span></div>
+          <div class="fig"><b>${money(s.total_given || 0)}</b><span>given in total</span></div>
+          <div class="fig"><b>${s.direct_gift_count}</b><span>direct gifts</span></div>
+          <div class="fig"><b>${s.gift_count - s.direct_gift_count}</b><span>Raise + Ride gifts</span></div>
+        </div>
+        <div class="why"><h3>Why this donor gets a note</h3>
+          <ul>${checks.map(([ok, t]) => `<li class="${ok ? "pass" : "fail"}">${ok ? "Yes" : "No"}: ${esc(t)}</li>`).join("")}</ul>
+        </div>
+      </aside>
+      <div>
+        <section><h3>Gifts</h3><div class="tablewrap"><table>
+          <thead><tr><th>Date</th><th>Amount</th><th>Fund</th><th>Via</th><th>Donor wrote</th></tr></thead>
+          <tbody>${d.gifts.map(g => `<tr class="${g.channel==="raise_ride"?"rr":""}"><td>${day(g.gift_date)}</td><td>${money(g.amount)}</td>
+            <td>${esc(g.fund)}</td><td>${esc(g.campaign)}${g.channel==="raise_ride"?" (not thanked here)":""}</td><td>${esc(g.receipt_note)}</td></tr>`).join("")}</tbody>
+        </table></div></section>
+        <section><h3>Thank-you notes</h3>
+          ${d.notes.length ? d.notes.map(n => `<p class="letter">${esc(n.body)}</p>
+            <p class="lettermeta">${n.status === "sent" ? `Sent ${day(n.sent_at)}` : n.status[0].toUpperCase()+n.status.slice(1)}${n.approved_by ? `, approved by ${esc(n.approved_by)}` : ""}</p>`).join("")
+          : `<p class="lettermeta">No notes yet.</p>`}
+        </section>
+      </div>
+    </div>`;
+}
+
+// ---------- Router ----------
+function route(){
+  const m = location.hash.match(/^#\/donor\/(\d+)/);
+  m ? donorPage(+m[1]) : reviewPage();
+  window.scrollTo(0, 0);
+}
+window.addEventListener("hashchange", route);
+if (MOCK) $("#mockbar").hidden = false;
+route();
+
+// ---------- Mock backend (only with ?mock=1) ----------
+function mock(path, opt){
+  const DB = window._mockdb ||= seed();
+  const wait = v => new Promise(r => setTimeout(() => r(structuredClone(v)), 250));
+  let m;
+  if ((m = path.match(/^\/api\/notes\?status=(\w+)/))) return wait(DB.notes.filter(n => n.status === m[1]));
+  if ((m = path.match(/^\/api\/notes\/(\d+)\/regenerate/))) {
+    const n = DB.notes.find(x => x.note_id === +m[1]);
+    n.body = `Dear ${n.first_name}, Your ${money(n.gift.amount)} for ${n.gift.fund} arrived this week and put a smile on the whole shop. It helps young riders learn to fix and ride their own bikes. Come see what's new at ${DONATE}. With gratitude, the Phoenix Bikes team`;
+    n.status = "draft"; n.approved_by = null; return wait(n);
+  }
+  if ((m = path.match(/^\/api\/notes\/(\d+)$/))) {
+    const n = DB.notes.find(x => x.note_id === +m[1]), p = JSON.parse(opt.body);
+    if (p.status === "approved" && !p.approved_by) return Promise.reject(new Error("approved_by is required"));
+    Object.assign(n, p); if (p.status === "draft") n.approved_by = null; return wait(n);
+  }
+  if ((m = path.match(/^\/api\/donors\/(\d+)/))) {
+    const d = DB.donors[m[1]], gifts = d.gifts, direct = gifts.filter(g => g.channel === "direct");
+    const sum = a => a.reduce((t, g) => t + g.amount, 0);
+    const sent = d.past.map(x => x.sent_at).sort().pop() || null;
+    return wait({donor: d.donor, gifts,
+      notes: [...DB.notes.filter(n => n.donor_id === +m[1]), ...d.past],
+      summary: {gift_count: gifts.length, direct_gift_count: direct.length, total_given: sum(gifts),
+        direct_total: sum(direct), last_gift_date: gifts[0]?.gift_date, raise_ride_only: !direct.length, last_note_sent_at: sent}});
+  }
+  return Promise.reject(new Error("Unknown mock path " + path));
+}
+function seed(){
+  const people = [
+    [12,"Maya","Chen","120 Oak St","Arlington","VA","22204",[["2026-10-21",35,"Earn-A-Bike","Online Giving","direct",""],["2026-05-02",75,"Youth Programs","Raise + Ride 2026","raise_ride",""]],true,""],
+    [15,"Luis","Ortiz","88 Glebe Rd","Arlington","VA","22201",[["2026-10-20",50,"Youth Programs","Year-End Appeal","direct","In honor of my dad, who taught me to ride"],["2025-11-30",25,"General Operating","Year-End Appeal","direct",""]],false,"2026-01-05"],
+    [21,"Grace","Ellis","4100 Columbia Pike","Arlington","VA","22204",[["2026-10-19",20,"Bike Donations Program","Spring Appeal","direct",""]],true,""],
+    [27,"Omar","Patel","9 Maple Ave","Falls Church","VA","22046",[["2026-10-22",100,"Youth Programs","Online Giving","direct",""]],true,""],
+  ];
+  const bodies = {
+    12: "Dear Maya, Thank you for your $35 gift to Earn-A-Bike. It helps a young rider earn a bike of their own and the skills to keep it rolling. You can follow along, or give again, at phoenixbikes.org/donate. With gratitude, the Phoenix Bikes team",
+    15: "Dear Luis, Your $50 gift to Youth Programs, given in honor of your dad, meant a great deal to all of us. It helps a teen spend an afternoon learning real repair skills in our shop. See what's new at phoenixbikes.org/donate. With gratitude, the Phoenix Bikes team",
+    21: "Dear Grace, We wanted to say thank you, by hand, for your $20 gift. It helps us refurbish donated bikes and get them back on the road with new riders. With gratitude, the Phoenix Bikes team",
+    27: "Dear Omar, Thank you for your $100 gift to Youth Programs - your very first! Welcome to the Phoenix Bikes family. Gifts like yours keep tools and parts on the bench for young mechanics. Follow our work at phoenixbikes.org/donate. With gratitude, the Phoenix Bikes team",
+  };
+  const db = {notes: [], donors: {}};
+  people.forEach(([id, f, l, a, c, s, z, gifts, first, sentAt], i) => {
+    const g = gifts.map(([gift_date, amount, fund, campaign, channel, receipt_note], j) => ({gift_id: id*10+j, gift_date, amount, fund, campaign, appeal: campaign, channel, receipt_note}));
+    db.donors[id] = {donor: {donor_id: id, account_number: String(10000+id), first_name: f, last_name: l, email: `${f.toLowerCase()}@example.org`, address_line: a, city: c, state: s, zip: z},
+      gifts: g, past: sentAt ? [{note_id: 900+i, body: `Dear ${f}, thank you so much for your year-end gift. It kept our shop doors open this winter. phoenixbikes.org/donate. With gratitude, the Phoenix Bikes team`, status: "sent", approved_by: "Dana", sent_at: sentAt, created_at: sentAt}] : []};
+    db.notes.push({note_id: i+1, donor_id: id, gift_id: g[0].gift_id, first_name: f, last_name: l, body: bodies[id], status: "draft", approved_by: null, sent_at: null,
+      created_at: "2026-10-24T10:00:00", first_gift: first, gift: g[0]});
+  });
+  return db;
+}
+</script>
+</body>
+</html>
