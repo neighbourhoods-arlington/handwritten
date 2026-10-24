@@ -51,6 +51,9 @@ export default defineConfig(({ command, mode }): UserConfig => {
         // Don't cache the server response in dev mode
         "Cache-Control": "public, max-age=0",
       },
+      // Bind mounts on macOS/Windows Docker don't deliver inotify events, so
+      // the dev server inside the container must poll to see file changes.
+      watch: process.env.VITE_WATCH_POLLING ? { usePolling: true, interval: 500 } : undefined,
     },
     preview: {
       headers: {

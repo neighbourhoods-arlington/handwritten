@@ -33,3 +33,8 @@ class ThankYouNoteRead(BaseModel):
     approved_at: datetime | None
     sent_at: datetime | None
     created_at: datetime
+    share_token: str | None = None
+    badge_key: str | None = None
+    impact_key: str | None = None
+    llm_model: str | None = None
+    checks: dict | None = None

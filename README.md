@@ -134,21 +134,56 @@ make test
 make lint
 ```
 
-## Donors page and "Say thank-you"
+## Donors page, "Say thank-you" and letters
 
 http://localhost:5173/donors/ lists every donor from the `donor_summary` view with
 gift counts, totals, last gift and status tags ("Raise + Ride only", "No mailing
-address", open note). Each row has a **Say thank-you** button that calls
-`POST /api/v1/donors/{id}/thank-you`.
+address", "Ready", open letter). **Say thank-you** on a row calls
+`POST /api/v1/donors/{id}/thank-you` and then opens `/donors/{id}/letter/`.
 
-The endpoint only creates a **draft** `thank_you_notes` row for the donor's most recent
-direct gift that has no active note. It refuses with an explicit reason (HTTP 409) when
-the donor has only Raise + Ride gifts, when every direct gift is already thanked, or
-when an open draft/approved note exists. A recent sent note inside the cooldown is
-returned as a warning, not a block. Text generation, approval and export are separate
-steps; this endpoint can never mark a note approved or sent.
+What the endpoint does (`api/app/api/routes/donors.py`, `api/app/services/letter.py`):
 
-Other donor endpoints: `GET /api/v1/donors?q=&limit=&offset=`, `GET /api/v1/donors/{id}`.
+1. If the donor already has an open (draft/approved) note **with a body, it is returned
+   unchanged**. A note without a body ("needs attention") is regenerated.
+2. Otherwise it creates a draft `thank_you_notes` row for the latest un-thanked direct
+   gift. Refusals carry an explicit reason (HTTP 409): Raise + Ride only, every direct
+   gift already thanked. A recent sent note inside the cooldown is a warning, not a block.
+3. The Ollama agent gathers facts through the `get_gift_context` MCP tool, which is
+   scoped to **the one gift being thanked**: amount, date, fund, what the donor wrote, a
+   compact giving history (first gift? returning? nth direct gift since which year) and
+   excerpts of previous letters. Other gifts' amounts are left out so they cannot leak
+   into the note. The model answers with **structured JSON**: `greeting`, `gift_thanks`,
+   `closing`, plus `impact_key` from the curated list in `api/app/content/letters.py`.
+   The impact sentence is inserted by code, the model never writes it.
+4. Checks before the body is accepted: first name present, the only dollar amount is the
+   gift's, `phoenixbikes.org/donate` present, no placeholder brackets, fits one card
+   (520 chars), impact statement not repeated. Similarity to other notes in the same
+   batch week is a warning. One retry with the errors fed back and `format=<schema>`;
+   if that fails too the note is stored without a body and flagged **needs attention**.
+5. The **badge** is computed by rules on the donor's history in
+   `api/app/services/badges.py`, never by the model. Seven badges exist; first match wins:
+
+   | Badge | Rule |
+   |-------|------|
+   | Lantern | the gift's note says "in memory" / "in honor" |
+   | First Gear | the donor's first direct gift |
+   | Headlight | returning: previous direct gift 365+ days earlier |
+   | Spoke Star | gives directly and rides Raise + Ride |
+   | Chain Keeper | 3+ direct gifts over 2+ calendar years |
+   | Tailwind | quick follow-up: previous direct gift within 60 days |
+   | Kickstand | everything else |
+
+6. A `share_token` is minted; `GET /api/v1/notes/{id}/qr.svg` renders a QR code to
+   `WEB_BASE_URL/t/{token}/`, the private donor page (badge + thanks, **no amounts**,
+   `noindex`). Data comes from `GET /api/v1/public/t/{token}`.
+
+The letter page has a **Send to Uuna Tek** button. It is a placeholder: it only shows the
+toast "Sent into the Queue: TBD". The export queue is not built yet.
+
+Nothing in this flow can approve or send a note; that stays with staff in the review step.
+
+Other endpoints: `GET /api/v1/donors?q=&limit=&offset=`, `GET /api/v1/donors/{id}`,
+`GET /api/v1/donors/{id}/thank-you` (existing letter or 404).
 
 ## Web (Qwik)
 
