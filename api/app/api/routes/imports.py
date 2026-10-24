@@ -5,11 +5,12 @@ from app.services.import_service import process_and_save_upload
 
 router = APIRouter(prefix="/imports", tags=["Imports"])
 
+
 @router.post("/")
 async def upload_file(file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
-    if not file.filename.endswith(('.csv', '.txt')):
+    if not file.filename.endswith((".csv", ".txt")):
         raise HTTPException(status_code=400, detail="Only CSV files are accepted.")
-    
+
     try:
         content = await file.read()
         # process_and_save_upload artık async olduğu için await ekledik:

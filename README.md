@@ -99,7 +99,9 @@ docker compose exec ollama ollama pull llama3.2
 ```
 
 Endpoints: `POST /api/v1/llm/generate`, `POST /api/v1/llm/chat`,
-`POST /api/v1/llm/ocr` (image + vision model), `GET /api/v1/llm/models`.
+`POST /api/v1/llm/ocr` (image + vision model), `GET /api/v1/llm/models`,
+`GET /api/v1/llm/status` (version, configured models, installed models, and what is
+loaded in memory right now — shown on the Overview page for demos).
 
 ## MCP server
 

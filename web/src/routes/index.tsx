@@ -1,9 +1,15 @@
 import { component$ } from "@builder.io/qwik";
 import { Link, routeLoader$, type DocumentHead } from "@builder.io/qwik-city";
-import { api, type DonorListItem, type HealthReady } from "~/lib/api";
+import {
+  api,
+  type DonorListItem,
+  type HealthReady,
+  type OllamaStatus,
+} from "~/lib/api";
 
 interface Overview {
   health: HealthReady | null;
+  ollama: OllamaStatus | null;
   donors: DonorListItem[];
   total: number;
   error: string | null;
@@ -11,18 +17,31 @@ interface Overview {
 
 export const useOverview = routeLoader$<Overview>(async ({ env }) => {
   try {
-    const [health, donors] = await Promise.all([
+    const [health, ollama, donors] = await Promise.all([
       api.healthReady(env),
+      api.ollamaStatus(env).catch(() => null),
       api.listDonors(env, "", 500),
     ]);
-    return { health, donors: donors.items, total: donors.total, error: null };
+    return {
+      health,
+      ollama,
+      donors: donors.items,
+      total: donors.total,
+      error: null,
+    };
   } catch (e) {
-    return { health: null, donors: [], total: 0, error: (e as Error).message };
+    return {
+      health: null,
+      ollama: null,
+      donors: [],
+      total: 0,
+      error: (e as Error).message,
+    };
   }
 });
 
 export default component$(() => {
-  const { health, donors, total, error } = useOverview().value;
+  const { health, ollama, donors, total, error } = useOverview().value;
   const queued = donors.filter((d) => d.pending_note_status).length;
   const rrOnly = donors.filter((d) => d.raise_ride_only).length;
   const noAddress = donors.filter((d) => !d.has_address).length;
@@ -59,6 +78,68 @@ export default component$(() => {
             <span>Ollama</span>
           </div>
         </div>
+      </section>
+
+      <section>
+        <h2>Ollama</h2>
+        {ollama?.available ? (
+          <div class="card ollama">
+            <p class="muted small">
+              Ollama {ollama.version} at{" "}
+              <span class="mono">{ollama.base_url}</span>
+            </p>
+            <div class="figures">
+              <div class="fig">
+                <b class="mono">{ollama.letter_model}</b>
+                <span>letter model (agent + MCP tools)</span>
+              </div>
+              <div class="fig">
+                <b class="mono">{ollama.vision_model}</b>
+                <span>vision model (OCR)</span>
+              </div>
+            </div>
+            <h3>Loaded in memory right now</h3>
+            {ollama.running.length === 0 ? (
+              <p class="muted small">
+                Nothing loaded. Ollama loads a model on the first request and
+                unloads it a few minutes after the last one.
+              </p>
+            ) : (
+              <ul class="models">
+                {ollama.running.map((m) => (
+                  <li key={m.name}>
+                    <span class="tag go">running</span>{" "}
+                    <b class="mono">{m.name}</b>
+                    <span class="muted small">
+                      {" "}
+                      · {m.processor} · {m.size_gb} GB
+                      {m.context_length
+                        ? ` · context ${m.context_length.toLocaleString()}`
+                        : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <h3>Installed</h3>
+            <ul class="models">
+              {ollama.installed.map((m) => (
+                <li key={m.name}>
+                  <b class="mono">{m.name}</b>
+                  <span class="muted small">
+                    {" "}
+                    · {m.family ?? "?"} {m.parameters ?? ""}{" "}
+                    {m.quantization ?? ""} · {m.size_gb} GB
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p class="issue">
+            Ollama is not reachable{ollama?.error ? `: ${ollama.error}` : ""}.
+          </p>
+        )}
       </section>
 
       <section>

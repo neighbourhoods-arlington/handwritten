@@ -487,3 +487,24 @@ main.container.public {
 .toast[hidden] {
   display: none;
 }
+
+/* ── Ollama status card ── */
+.card.ollama h3 {
+  font-size: 15px;
+  margin: 16px 0 6px;
+}
+.card.ollama .figures {
+  margin: 8px 0 0;
+}
+.models {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.models li {
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+}
+.models li:first-child {
+  border-top: 0;
+}

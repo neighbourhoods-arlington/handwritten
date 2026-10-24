@@ -40,6 +40,30 @@ export interface AgentResponse {
   tool_calls: AgentToolCall[];
 }
 
+export interface OllamaStatus {
+  available: boolean;
+  base_url: string;
+  version: string | null;
+  letter_model: string;
+  vision_model: string;
+  installed: {
+    name: string;
+    size_gb: number;
+    family: string | null;
+    parameters: string | null;
+    quantization: string | null;
+  }[];
+  running: {
+    name: string;
+    size_gb: number;
+    size_vram_gb: number;
+    context_length: number | null;
+    expires_at: string | null;
+    processor: string;
+  }[];
+  error: string | null;
+}
+
 export interface DonorListItem {
   donor_id: number;
   account_number: string;
@@ -174,6 +198,7 @@ async function request<T>(env: EnvReader | undefined, path: string, init?: Reque
 
 export const api = {
   healthReady: (env?: EnvReader) => request<HealthReady>(env, "/health/ready"),
+  ollamaStatus: (env?: EnvReader) => request<OllamaStatus>(env, "/llm/status"),
   listDocuments: (env?: EnvReader, limit = 50) =>
     request<Document[]>(env, `/documents?limit=${limit}`),
   listDonors: (env?: EnvReader, q = "", limit = 100, offset = 0) => {

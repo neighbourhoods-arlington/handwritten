@@ -2,10 +2,16 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from ollama import ResponseError
 
 from app.core.config import get_settings
-from app.schemas.llm import ChatRequest, GenerateRequest, LLMResponse
+from app.schemas.llm import ChatRequest, GenerateRequest, LLMResponse, OllamaStatus
 from app.services import ollama_client
 
 router = APIRouter(prefix="/llm", tags=["llm"])
+
+
+@router.get("/status", response_model=OllamaStatus)
+async def ollama_status() -> OllamaStatus:
+    """Ollama version, configured models, installed models and what is loaded right now."""
+    return OllamaStatus(**await ollama_client.status())
 
 
 @router.get("/models")
